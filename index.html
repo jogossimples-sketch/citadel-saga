@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Citadel Saga - Wave Defense</title>
+    <style>
+        body { margin: 0; background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: sans-serif; }
+        canvas { border: 4px solid #444; background: #333; cursor: crosshair; }
+        #ui { position: absolute; top: 10px; left: 10px; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <h1>Citadel Saga</h1>
+        <p>Wave: <span id="wave">1</span> | Ouro: <span id="gold">0</span></p>
+        <p>Vida do Castelo: <span id="health">100</span></p>
+    </div>
+    <canvas id="gameCanvas" width="800" height="450"></canvas>
+    <script src="game.js"></script>
+</body>
+</html>
