@@ -1,156 +1,94 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// --- VARIÁVEIS DE ESTADO (PROGRESSO) ---
-let gameData = {
-    gold: 0,
-    wave: 1,
-    archerLvl: 1,
-    castleLvl: 1,
-    currentHealth: 100
-};
+// Ajuste automático de tamanho
+canvas.width = 800;
+canvas.height = 450;
 
-// --- CARREGAR JOGO ---
+let gameData = { gold: 0, wave: 1, archerLvl: 1, castleLvl: 1, currentHealth: 100 };
+
 function loadGame() {
-    const savedData = localStorage.getItem('citadelSagaSave');
-    if (savedData) {
-        gameData = JSON.parse(savedData);
-    }
+    const saved = localStorage.getItem('citadelSagaSave');
+    if (saved) gameData = JSON.parse(saved);
 }
-
-// --- SALVAR JOGO ---
-function saveGame() {
-    localStorage.setItem('citadelSagaSave', JSON.stringify(gameData));
-}
-
-loadGame(); // Executa ao abrir o jogo
+loadGame();
 
 let enemies = [];
 let arrows = [];
 let lastShot = 0;
 
-// --- FUNÇÕES DE DESENHO ---
-function drawHero(x, y, lvl) {
-    ctx.fillStyle = lvl > 5 ? "#ffd700" : "#6a1b9a"; // Fica dourada no lvl 5+
-    ctx.fillRect(x, y, 40, 50);
-    ctx.fillStyle = "#ffccbc"; ctx.fillRect(x + 10, y + 5, 20, 20);
-    ctx.fillStyle = "black"; ctx.fillRect(x + 15, y + 10, 3, 3); ctx.fillRect(x + 22, y + 10, 3, 3);
+function drawArcher(x, y, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, 30, 40); // Corpo
+    ctx.fillStyle = "#ffccbc"; ctx.fillRect(x+5, y+5, 20, 15); // Rosto
 }
 
-function drawSlime(x, y) {
-    ctx.fillStyle = "#4caf50";
-    ctx.beginPath(); ctx.ellipse(x + 20, y + 20, 20, 15, 0, 0, Math.PI * 2); ctx.fill();
-}
-
-// --- UPGRADES ---
 function upgradeArcher() {
     let cost = gameData.archerLvl * 50;
     if (gameData.gold >= cost) {
-        gameData.gold -= cost;
-        gameData.archerLvl++;
-        saveGame();
-        updateUI();
-    } else { alert("Ouro insuficiente!"); }
+        gameData.gold -= cost; gameData.archerLvl++; saveGame(); updateUI();
+    }
 }
 
 function upgradeCastle() {
     let cost = gameData.castleLvl * 100;
     if (gameData.gold >= cost) {
-        gameData.gold -= cost;
-        gameData.castleLvl++;
-        gameData.currentHealth = gameData.castleLvl * 100;
-        saveGame();
-        updateUI();
-    } else { alert("Ouro insuficiente!"); }
-}
-
-function resetGame() {
-    if(confirm("Deseja resetar todo seu progresso?")) {
-        localStorage.removeItem('citadelSagaSave');
-        location.reload();
+        gameData.gold -= cost; gameData.castleLvl++; 
+        gameData.currentHealth = gameData.castleLvl * 100; saveGame(); updateUI();
     }
 }
+
+function saveGame() { localStorage.setItem('citadelSagaSave', JSON.stringify(gameData)); }
 
 function updateUI() {
     document.getElementById('gold').innerText = gameData.gold;
     document.getElementById('wave').innerText = gameData.wave;
     document.getElementById('health').innerText = Math.floor(gameData.currentHealth);
-    document.getElementById('maxHealth').innerText = gameData.castleLvl * 100;
     document.getElementById('archerCost').innerText = gameData.archerLvl * 50;
     document.getElementById('castleCost').innerText = gameData.castleLvl * 100;
-}
-
-function spawnEnemy() {
-    let hpBase = 20 + (gameData.wave * 10);
-    enemies.push({
-        x: 800,
-        y: 300 + (Math.random() * 30),
-        hp: hpBase,
-        maxHp: hpBase,
-        speed: 1.2 + (gameData.wave * 0.1)
-    });
+    document.getElementById('arcLvl').innerText = gameData.archerLvl;
+    document.getElementById('casLvl').innerText = gameData.castleLvl;
 }
 
 function update() {
-    ctx.fillStyle = "#81d4fa"; ctx.fillRect(0, 0, 800, 450); // Céu
-    ctx.fillStyle = "#388e3c"; ctx.fillRect(0, 350, 800, 100); // Grama
+    // Fundo
+    ctx.fillStyle = "#81d4fa"; ctx.fillRect(0, 0, 800, 450);
+    ctx.fillStyle = "#388e3c"; ctx.fillRect(0, 350, 800, 100);
 
     // Castelo
-    ctx.fillStyle = "#455a64"; ctx.fillRect(20, 150, 100, 200);
-    drawHero(80, 250, gameData.archerLvl);
+    ctx.fillStyle = "#455a64"; ctx.fillRect(20, 100, 80, 250);
+    
+    // TRIO DE ARQUEIRAS (Aparecem conforme o Lvl)
+    drawArcher(45, 110, "#6a1b9a"); // Arqueira 1
+    if(gameData.archerLvl > 5) drawArcher(45, 160, "#4a148c"); // Arqueira 2 (desbloqueia lvl 5)
+    if(gameData.archerLvl > 10) drawArcher(45, 210, "#ffd700"); // Arqueira 3 (desbloqueia lvl 10)
 
-    // Lógica de Inimigos
+    // Inimigos e Flechas
     enemies.forEach((en, i) => {
         en.x -= en.speed;
-        drawSlime(en.x, en.y);
-        ctx.fillStyle = "red"; ctx.fillRect(en.x, en.y - 10, (en.hp/en.maxHp)*40, 5);
-
-        if (en.hp <= 0) {
-            enemies.splice(i, 1);
-            gameData.gold += 10 + gameData.wave;
-            updateUI();
-            saveGame(); // Salva o ouro ganho
-        }
-
-        if (en.x < 120) {
-            gameData.currentHealth -= 0.1;
-            updateUI();
-            if (gameData.currentHealth <= 0) {
-                alert("Derrota! Voltando uma Wave.");
-                gameData.wave = Math.max(1, gameData.wave - 1);
-                gameData.currentHealth = gameData.castleLvl * 100;
-                enemies = [];
-                saveGame();
-            }
-        }
+        ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(en.x, en.y, 20, 0, Math.PI*2); ctx.fill();
+        if (en.hp <= 0) { enemies.splice(i, 1); gameData.gold += 10; updateUI(); }
+        if (en.x < 100) { gameData.currentHealth -= 0.5; updateUI(); }
     });
 
-    // Flechas (Dano baseado no Lvl da Arqueira)
     arrows.forEach((ar, i) => {
-        ar.x += 12;
-        ctx.fillStyle = "yellow"; ctx.fillRect(ar.x, ar.y, 15, 4);
-        if (enemies.length > 0 && ar.x > enemies[0].x) {
-            enemies[0].hp -= (5 + (gameData.archerLvl * 5));
-            arrows.splice(i, 1);
-        }
+        ar.x += 15;
+        ctx.fillStyle = "yellow"; ctx.fillRect(ar.x, ar.y, 10, 4);
+        if (enemies[0] && ar.x > enemies[0].x) { enemies[0].hp -= (10 + gameData.archerLvl); arrows.splice(i, 1); }
     });
 
-    // Atirar
-    if (Date.now() - lastShot > 800 && enemies.length > 0) {
-        arrows.push({x: 130, y: 275});
+    if (Date.now() - lastShot > 600 && enemies.length > 0) {
+        arrows.push({x: 100, y: 130});
+        if(gameData.archerLvl > 5) arrows.push({x: 100, y: 180});
         lastShot = Date.now();
     }
 
-    // Passar de Wave
     if (enemies.length === 0) {
-        gameData.wave++;
-        saveGame();
-        updateUI();
-        for(let i=0; i < 3 + Math.floor(gameData.wave/5); i++) spawnEnemy();
+        gameData.wave++; updateUI();
+        for(let i=0; i<3 + (gameData.wave/2); i++) 
+            enemies.push({x: 800 + (i*60), y: 320, hp: 20 + (gameData.wave*5), speed: 2});
     }
 
     requestAnimationFrame(update);
 }
-
-updateUI();
-update();
+updateUI(); update();
