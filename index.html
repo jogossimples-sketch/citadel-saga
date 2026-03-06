@@ -1,14 +1,31 @@
-<div id="ui">
-    <h1>Citadel Saga</h1>
-    <p>Wave: <span id="wave">1</span> | Ouro: <span id="gold">0</span></p>
-    <p>Vida do Castelo: <span id="health">100</span> / <span id="maxHealth">100</span></p>
-    <hr>
-    <button onclick="upgradeArcher()">Upgrade Arqueira (Custo: <span id="archerCost">50</span>)</button>
-    <button onclick="upgradeCastle()">Upgrade Castelo (Custo: <span id="castleCost">100</span>)</button>
-    <button onclick="resetGame()" style="background: red; color: white;">Resetar Jogo</button>
-</div>
-
-<style>
-    button { padding: 10px; cursor: pointer; display: block; margin-top: 5px; width: 200px; font-weight: bold; }
-    #ui { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; pointer-events: all; }
-</style>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citadel Saga</title>
+    <style>
+        body { margin: 0; background: #222; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; overflow: hidden; }
+        canvas { background: #81d4fa; border-bottom: 5px solid #388e3c; width: 100vw; height: 60vh; max-width: 800px; }
+        #ui { background: #333; color: white; width: 100%; padding: 10px; box-sizing: border-box; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .info { grid-column: span 2; display: flex; justify-content: space-around; background: #444; padding: 5px; border-radius: 5px; margin-bottom: 5px; }
+        button { padding: 10px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; }
+        .up-btn { background: #4caf50; color: white; }
+        .reset-btn { background: #f44336; color: white; grid-column: span 2; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <div class="info">
+            <span>Wave: <b id="wave">1</b></span>
+            <span>Ouro: <b id="gold">0</b></span>
+            <span>Vida: <b id="health">100</b></span>
+        </div>
+        <button class="up-btn" onclick="upgradeArcher()">Arqueiras (Lvl <span id="arcLvl">1</span>): <span id="archerCost">50</span></button>
+        <button class="up-btn" onclick="upgradeCastle()">Castelo (Lvl <span id="casLvl">1</span>): <span id="castleCost">100</span></button>
+        <button class="reset-btn" onclick="resetGame()">RESETAR PROGRESSO</button>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <script src="game.js"></script>
+</body>
+</html>
